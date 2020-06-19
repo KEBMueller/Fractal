@@ -216,7 +216,7 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		double abx = bx-ax;
 		double aby = by-ay;
 		
-		//Ur-Vector um alpha 1 gedreht und length 1 scaliert
+		//Ur-Vector um alpha 1 gedreht und length 1 scalier
 		double newAx = ax + firstlength * (abx * Math.cos(Math.toRadians(firstalpha)) - aby * Math.sin(Math.toRadians(firstalpha)));
 		double newAy = ay + firstlength * (abx * Math.sin(Math.toRadians(firstalpha)) + aby * Math.cos(Math.toRadians(firstalpha)));
 		
