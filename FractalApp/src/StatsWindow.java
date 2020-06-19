@@ -176,7 +176,7 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		Object s = table.getValueAt(x, y);
 		try {
 		n = Integer.parseInt("" + s);
-		matrix.editmatrix(x, y, n);
+		matrix.editmatrix(y, x, n);
 		redrawFractal();
 		}
 		catch (Exception ex){
@@ -190,7 +190,7 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		
 		g.clearRect(0, 0, 1000, 1000);
 		g.drawLine(fractalwindow.getWidth()/2, fractalwindow.getHeight(),fractalwindow.getWidth()/2, (int)(fractalwindow.getHeight() * 0.75));
-		drawrecursive(x1,y1,x2,y2,1,3,g);
+		drawrecursive(x1,y1,x2,y2,0,2,g);
 		table.revalidate();
 		table.repaint();
 		
@@ -198,18 +198,18 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 	}
 	
 	public void drawrecursive (double ax, double ay, double bx, double by, int currentrow, int currentdepth, Graphics2D g) {
-		int fractalid = matrix.getmatrixvalue(currentrow, 1);
+		int fractalid = matrix.getmatrixvalue(0, currentrow);
 		
 			if(fractalid <= 0)
 			{		
 				return;
 			}
-		int nextfractal = matrix.getmatrixvalue(currentrow, 2);
-		double firstalpha = matrix.getmatrixvalue(currentrow, 3);
-		double firstlength = matrix.getmatrixvalue(currentrow, 4)/100.0;
-		double secondalpha = matrix.getmatrixvalue(currentrow, 5);
-		double secondlength = matrix.getmatrixvalue(currentrow, 6)/100.0;
-		int color = matrix.getmatrixvalue(currentrow, 7);
+		int nextfractal = matrix.getmatrixvalue(1, currentrow);
+		double firstalpha = matrix.getmatrixvalue(2, currentrow);
+		double firstlength = matrix.getmatrixvalue(3, currentrow)/100.0;
+		double secondalpha = matrix.getmatrixvalue(4, currentrow);
+		double secondlength = matrix.getmatrixvalue(5, currentrow)/100.0;
+		int color = matrix.getmatrixvalue(6, currentrow);
 		
 
 		//UR Vector
@@ -220,21 +220,19 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		double newAx = ax + firstlength * (abx * Math.cos(Math.toRadians(firstalpha)) - aby * Math.sin(Math.toRadians(firstalpha)));
 		double newAy = ay + firstlength * (abx * Math.sin(Math.toRadians(firstalpha)) + aby * Math.cos(Math.toRadians(firstalpha)));
 		
-		double newxlength = secondlength * (abx * Math.cos(Math.toRadians(secondalpha)) - aby * Math.sin(Math.toRadians(secondalpha)));
-		double newylength = secondlength * (abx * Math.sin(Math.toRadians(secondalpha)) + aby * Math.cos(Math.toRadians(secondalpha)));
+		//Ur-Vector um alpha 2 ..
+		double newBx = ax + secondlength * (abx * Math.cos(Math.toRadians(secondalpha)) - aby * Math.sin(Math.toRadians(secondalpha)));
+		double newBy = ay + secondlength * (abx * Math.sin(Math.toRadians(secondalpha)) + aby * Math.cos(Math.toRadians(secondalpha)));
 		
-		
-		double newBx = newAx + newxlength;
-		double newBy = newAy + newylength;
-		
-		
+		double newxlength = newBx - newAx;
+		double newylength = newBy - newAy;
 		
 		
 		int nextcolumn = findnextfractalcolumn(nextfractal, currentdepth, currentrow);
 		
-		if(nextcolumn > 0 && currentdepth > 0) {
-			//drawrecursive(newAx,newAy,newBx,newBy,nextcolumn, currentdepth-1, g);
-			drawrecursive(newAx,newAy,newAx+newxlength,newAy+newylength,nextcolumn, currentdepth-1,g);
+		if(nextcolumn >= 0 && currentdepth > 0) {
+			drawrecursive(newAx,newAy,newBx,newBy,nextcolumn, currentdepth-1, g);
+			//drawrecursive(newAx,newAy,newAx+newxlength,newAy+newylength,nextcolumn, currentdepth-1,g);
 		}
 		
 
@@ -272,17 +270,18 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 			g.drawLine((int)newAx, (int)newAy, (int)newBx, (int)newBy);
 		}
 		
-		if(matrix.getmatrixvalue(currentrow+1, 1) == fractalid) {
+		if(matrix.getmatrixvalue(0,currentrow+1) == fractalid) {
 			//drawrecursive(ax,ay,bx,by,currentrow+1,currentdepth,g);
-			drawrecursive(ax,ay,ax+newxlength,ay+newylength,currentrow+1,currentdepth,g);
+			drawrecursive(ax,ay,bx,by,currentrow+1,currentdepth,g);
 		}
 	}
 	
 	public int findnextfractalcolumn(int fractalid, int currentdepth, int currentrow) {
 		if(currentdepth <= 0)
 			return -1;
-		for(int i = currentrow-1; i < matrix.getMatrix()[0].length; i++) {
-			if(matrix.getmatrixvalue(1, i) == fractalid) {
+		for(int i = 0; i < matrix.getMatrix()[0].length; i++) {
+			System.out.println(matrix.getmatrixvalue(1, i) + "  ==  " + fractalid);
+			if(matrix.getmatrixvalue(0, i) == fractalid) {
 				return i;
 			}
 		}

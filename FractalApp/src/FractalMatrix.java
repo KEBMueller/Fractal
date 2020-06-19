@@ -31,8 +31,8 @@ public class FractalMatrix {
 	}
 	
 	public int getmatrixvalue(int x, int y) {
-		if(isXYsafe(x-1,y-1))
-			return getXY(x-1,y-1);
+		if(isXYsafe(x,y))
+			return getXY(x,y);
 		return 0;
 	}
 	
