@@ -4,6 +4,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -20,29 +22,32 @@ import javax.swing.table.TableModel;
 /*
  * Das Hauptfenster welches die Tabelle welche das Fractal repräsentiert dastellt und veränderbar macht 
  */
-public class StatsWindow implements TableModelListener, ActionListener , ChangeListener{
+public class StatsWindow implements TableModelListener, ActionListener , ChangeListener , MouseListener{
 	
 	private FractalMatrix matrix;
 	private FractalWindow fractalwindow;
 	
 	private JFrame frame;
 	private JTable table;
-	 private int[] lsi = {1,1};
+	private int[] lsi = {1,1};
+	
+	private JSlider depthslider;
 	private JButton addslider;
 	private JSlider mainslider;
 	private TableModel model;
 	public static String[] tablenames = {"Frac", "n.Frac","a°","L %","2.a°","2.L%","Color"};
 	public static double[][] minmaxtable = {{   0,  9},
 			    							{   0,  9},
-			    							{-90,90},
 			    							{-200,200},
-			    							{-90,90},
+			    							{-200,200},
+			    							{-200,200},
 			    							{-200,200},
 			    							{   0,  9}};
 	
 	//Position der ersten beiden anhaltspunkte
 	private int x1,y1,x2,y2;
 	
+	private int depth;
 	
 	/*
 	 * Erstellt das Statswindow
@@ -54,6 +59,7 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		frame = new JFrame();
 		addslider = new JButton();
 		mainslider = new JSlider();
+		depthslider = new JSlider();
 		
 		DefaultTableModel model = new DefaultTableModel();
 		
@@ -113,6 +119,17 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		
 		frame.add(addslider, c);
 		
+		//Fügt den slider für die rekursionstiefe ein
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.gridx = 1;
+		c.gridy = 3;
+		c.weightx = 0.8;
+		
+		depthslider.addChangeListener(this);
+		depthslider.setMinimum(1);
+		depthslider.setMaximum(10);
+		
+		frame.add(depthslider, c);
 		
 		
 		frame.revalidate();
@@ -123,8 +140,8 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		x1 = (int)(fw.getWidth() * 0.5);
 		x2 = (int)(fw.getWidth() * 0.5);
 		
-		y1 = (int)(fw.getHeight());
-		y2 = (int)(fw.getHeight() * 0.75);
+		y1 = (int)(fw.getHeight() * 0.75);
+		y2 = (int)(fw.getHeight() * 0.5);
 	}
 	
 	public void updateStats() {
@@ -151,6 +168,9 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 				mainslider.setMaximum((int) minmaxtable[x][1]);
 				mainslider.setValue(matrix.getmatrixvalue(x, y));
 			}
+		} else if(sc.getSource().equals(depthslider)) {
+			depth = depthslider.getValue();
+			this.redrawFractal();
 		}
 		else if(sc.getSource().getClass() == DedicatedSlider.class) {
 			DedicatedSlider slider = (DedicatedSlider) sc.getSource();
@@ -190,7 +210,7 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		
 		g.clearRect(0, 0, 1000, 1000);
 		g.drawLine(fractalwindow.getWidth()/2, fractalwindow.getHeight(),fractalwindow.getWidth()/2, (int)(fractalwindow.getHeight() * 0.75));
-		drawrecursive(x1,y1,x2,y2,0,2,g);
+		drawrecursive(x1,y1,x2,y2,0,depth,g);
 		table.revalidate();
 		table.repaint();
 		
@@ -287,6 +307,35 @@ public class StatsWindow implements TableModelListener, ActionListener , ChangeL
 		}
 		
 		return -1;
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
