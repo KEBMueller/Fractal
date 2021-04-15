@@ -290,7 +290,6 @@ public class Main{
 				}
 			}
 		}
-		fractalTableHasChanged = true;
 	}
 
 }
