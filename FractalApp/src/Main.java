@@ -1,4 +1,6 @@
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
@@ -27,6 +29,7 @@ public class Main{
 	private static LinkedList<FractalMatrix> fractaltables;	//a table of all loaded fractals
 	private static int currenttable = 0;					//0 = no select table, <= -1 invalid
 	private static boolean fractalTableHasChanged = true;
+	private static boolean fractalSelectedHasChanged = false;
 	
 	private static InputPipe inputpipe;
 
@@ -187,12 +190,44 @@ public class Main{
 	}
 
 	private static void updateGraphics() {
-		if(fractalTableHasChanged) {
+		if(fractalTableHasChanged || fractalSelectedHasChanged) {
 		updateComboBox();
 		updateTable();
-
+		
+		fractalSelectedHasChanged = false;
 		fractalTableHasChanged = false;
 		}
+		
+		drawCurrentTableToMainWindow();
+	}
+
+	private static void drawCurrentTableToMainWindow() {
+		Graphics g = mainpanel.getGraphics();
+		
+	}
+	
+	private static void drawCurrentTableToMainWindow(int depth, int tablerow, Graphics g) {
+		Integer[][] rowvalues = fractaltables.get(currenttable).actualmatrix;
+
+		if(depth <=0) return;
+		if(rowvalues[0][tablerow] == 0) return;
+		
+		
+		int currentFrac = rowvalues[0][tablerow];
+		int nextFrac = rowvalues[1][tablerow];
+		int x1 = rowvalues[2][tablerow];
+		int y1 = rowvalues[3][tablerow];
+		int x2 = rowvalues[4][tablerow];
+		int y2 = rowvalues[5][tablerow];
+		int color = rowvalues[6][tablerow];
+		
+		g.setColor(new Color(color));
+		
+		
+		
+		
+		
+		
 	}
 
 	private static void updateComboBox() {
@@ -205,7 +240,7 @@ public class Main{
 	}
 
 	private static void updateTable() {
-			if(fractalTableHasChanged) {
+			if(fractalTableHasChanged || fractalSelectedHasChanged) {
 			if(currenttable <0 || fractaltables.isEmpty())
 				return;
 			FractalMatrix currentmatrix = fractaltables.get(currenttable);
@@ -231,11 +266,18 @@ public class Main{
 		ActionEvent ae = inputpipe.pollNextActionEvent();
 		if(ae != null) {
 			if(ae.getSource().equals(safebutton)) {
-				safeCurrentTable();
+				//safe the current table
+				FractalLoader.safeFractal(fractaltables.get(currenttable));
 			}
 			
 			if(ae.getSource().equals(loadbutton)) {
+				//load a new table
 				loadNewTable();
+			}
+			
+			if(ae.getSource().equals(fractalcombobox)) {
+				currenttable = fractalcombobox.getSelectedIndex();
+				fractalSelectedHasChanged = true;
 			}
 		}
 	}
@@ -249,10 +291,7 @@ public class Main{
 		
 	}
 
-	private static void safeCurrentTable() {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 	private static void handleMouseEvent() {
 		// TODO Auto-generated method stub
@@ -281,7 +320,7 @@ public class Main{
 		FractalMatrix matrix = fractaltables.get(currenttable);
 		Integer[][] actualmatrix = matrix.actualmatrix;
 		for(int i = 0; i < actualmatrix.length; i++) {
-			for(int j = 0; j<actualmatrix[i].length ; j++) {
+			for(int j = 0; j<actualmatrix[i].length && j <fractaltable.getModel().getRowCount(); j++) {
 				try {
 					actualmatrix[i][j] = Integer.parseInt((String)(fractaltable.getModel().getValueAt(j, i)+""));
 				} catch(Exception e) {
