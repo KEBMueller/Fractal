@@ -37,7 +37,7 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener{
 	 *         2 if an MouseEvent
 	 *         3 if an KeyEvent
 	 */
-	public int getNextEventByTime() {
+	public int getNextEventIndexByTime() {
 		
 		return 0;
 	}

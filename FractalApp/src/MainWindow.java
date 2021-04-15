@@ -11,7 +11,6 @@ public class MainWindow extends JFrame {
 		
 		layout = new GridBagLayout();
 		constrains = new GridBagConstraints();
-		
 		this.setLayout(layout);
 		this.setPreferredSize(Main.resolution);
 		this.pack();

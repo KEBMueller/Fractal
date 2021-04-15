@@ -1,5 +1,9 @@
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 public class Main{
 	// various constants
@@ -10,12 +14,22 @@ public class Main{
 	//Graphics parameter
 	public static double framerate = 60;
 	public static Dimension resolution = new Dimension(600,400); 
+	public static Dimension sidePanelResolution = new Dimension(600,400); 
 	
 	private static FractalTable[] fractaltables;
-	//0 = no select table, -1 invalid
+	//0 = no select table, <= -1 invalid
 	private static int currenttable = 0;
 	private static MainWindow mainwindow;
 	private static InputPipe inputpipe;
+
+	
+	//GUI Objects
+	private static Dimension buttonsize = new Dimension(70,15);
+	private static JButton safebutton;
+	private static JButton loadbutton;
+	private static JPanel mainpanel;
+	private static JPanel[] sidepanels;
+	
 
 	public static void main(String[] args) {
 		//	Setup
@@ -52,7 +66,39 @@ public class Main{
 	}
 
 	private static void setupMainWindow() {
+		GridBagConstraints constraints = new GridBagConstraints();
 		mainwindow = new MainWindow();
+		safebutton = new JButton();
+		loadbutton = new JButton();
+		
+		safebutton.setPreferredSize(buttonsize);
+		loadbutton.setPreferredSize(buttonsize);
+
+		constraints.gridx = 0;
+		constraints.gridy = 1;
+		constraints.ipadx = buttonsize.width;
+		constraints.ipady = buttonsize.height;
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.anchor = GridBagConstraints.SOUTHWEST;
+		safebutton.addActionListener(inputpipe);
+		safebutton.setVisible(true);
+		safebutton.setText("Safe");
+		mainwindow.add(safebutton, constraints);
+
+
+		constraints.gridwidth = 3;
+		constraints.gridheight = 4;
+		constraints.gridx = 1;
+		constraints.gridy = 1;
+		constraints.ipadx = buttonsize.width;
+		constraints.ipady = buttonsize.height;
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.anchor = GridBagConstraints.SOUTHWEST;
+		loadbutton.addActionListener(inputpipe);
+		loadbutton.setVisible(true);
+		loadbutton.setText("Load");
+		mainwindow.add(loadbutton, constraints);
+		
 		mainwindow.setVisible(true);
 	}
 
@@ -86,7 +132,9 @@ public class Main{
 		if(ae == null) 
 			return;
 		
-		if(ae.getSource().equals(Safe))
+		if(ae.getSource().equals(safebutton)) {
+			
+		}
 	}
 
 }

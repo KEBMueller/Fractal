@@ -3,10 +3,10 @@ import java.awt.Image;
 
 import javax.swing.JPanel;
 
-public class MyPanel extends JPanel{
+public class MainPanel extends JPanel{
 	Image img;
 	
-	public MyPanel() {
+	public MainPanel() {
 		img = null;
 	}
 	
