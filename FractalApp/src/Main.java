@@ -2,8 +2,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.Vector;
@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 
@@ -23,16 +24,19 @@ public class Main{
 	
 	//Graphics parameter
 	public static double framerate = 30;
-	public static Dimension resolution = new Dimension(600,400); 
-	public static Dimension sidePanelResolution = new Dimension(600,400); 
-	public static final Dimension mainpanelResolution = new Dimension(500,500); 
+	public static Dimension resolution = new Dimension(1900,1000); 
+	public static Dimension sidepanelResolution = new Dimension(200,200); 
+	public static Dimension mainpanelResolution = new Dimension(500,500); 
+	public static Dimension colorpanelResolution = new Dimension(50,50); 
 	
 	
 
 	private static LinkedList<FractalMatrix> fractaltables;	//a table of all loaded fractals
 	private static int currenttable = 0;					//0 = no select table, <= -1 invalid
+	private static int currentrow = 0;					//-1 = no select table
 	private static boolean fractalTableHasChanged = true;
-	private static boolean fractalSelectedHasChanged = false;
+	private static boolean fractalSelectedBoxHasChanged = false;
+	private static boolean fractalSelectedRowHasChanged = false;
 	
 	private static InputPipe inputpipe;
 
@@ -44,17 +48,12 @@ public class Main{
 	private static JButton safebutton;
 	private static JButton loadbutton;
 	private static MainPanel mainpanel;
+	private static MainPanel sidepanel;
+	private static MainPanel colorpanel;
 	private static JComboBox<String> fractalcombobox;
 	private static JTable fractaltable;
 	private static String[] fractaltablecolumns =  {"Cur. Frac.","Next Frac","x1","y1","x2","y2","Color"};
 	private static int fractaltablelength = 10;
-	public static double[][] minmaxtable = {{   0,  9},
-											{   0,  9},
-											{-200,200},
-											{-200,200},
-											{-200,200},
-											{-200,200},
-											{   0,  9}};
 	
 	//side frames containing dedicated fractal editors
 	//they get closed when a new Fractal is selected/loaded
@@ -66,7 +65,7 @@ public class Main{
 		
 		//	Setup
 		fractaltables = new LinkedList<FractalMatrix>();
-		fractaltables.add(new FractalMatrix(fractaltablelength, "Default"));
+		//fractaltables.add(new FractalMatrix(fractaltablelength, "Default.txt"));
 		inputpipe = new InputPipe();
 		setupMainWindow();
 		
@@ -104,6 +103,8 @@ public class Main{
 		safebutton = new JButton();
 		loadbutton = new JButton();
 		mainpanel = new MainPanel();
+		sidepanel = new MainPanel();
+		colorpanel = new MainPanel();
 		fractaltable = new JTable(fractaltablelength,fractaltablecolumns.length);
 		fractalcombobox = new JComboBox<String>();
 		
@@ -111,7 +112,7 @@ public class Main{
 		loadbutton.setPreferredSize(buttonsize);
 
 		constraints.gridx = 0;
-		constraints.gridy = 2;
+		constraints.gridy = 3;
 		constraints.weightx = 0.0;
 		constraints.weighty = 0.0;
 		constraints.ipadx = buttonsize.width;
@@ -125,7 +126,7 @@ public class Main{
 
 
 		constraints.gridx = 1;
-		constraints.gridy = 2;
+		constraints.gridy = 3;
 		constraints.weightx = 0.0;
 		constraints.weighty = 0.0;
 		constraints.ipadx = buttonsize.width;
@@ -157,7 +158,7 @@ public class Main{
 		constraints.gridheight = 1;
 		constraints.gridx = 0;
 		constraints.gridy = 0;
-		constraints.weightx = 0.1;
+		constraints.weightx = 0.5;
 		constraints.weighty = 0.0;
 		constraints.ipadx = 0;
 		constraints.ipady = 0;
@@ -172,8 +173,8 @@ public class Main{
 		constraints.gridheight = 1;
 		constraints.gridx = 0;
 		constraints.gridy = 1;
-		constraints.weightx = 0.0;
-		constraints.weighty = 100;
+		constraints.weightx = 0.1;
+		constraints.weighty = 0.7;
 		constraints.ipadx = 0;
 		constraints.ipady = 0;
 		constraints.fill = GridBagConstraints.BOTH;
@@ -187,28 +188,73 @@ public class Main{
 		tablemodel.addTableModelListener(inputpipe);
 		fractaltable.setEnabled(true);
 		fractaltable.addMouseListener(inputpipe);
+		fractaltable.getSelectionModel().addListSelectionListener(inputpipe);
 		fractaltable.setModel(tablemodel);
 		JScrollPane scrollpane = new JScrollPane(fractaltable);
 		scrollpane.setVisible(true);
 		mainwindow.add(scrollpane, constraints);
 		
+		constraints.gridwidth  = 2;
+		constraints.gridheight = 1;
+		constraints.gridx = 1;
+		constraints.gridy = 2;
+		constraints.weightx = 0.5;
+		constraints.weighty = 0.7;
+		constraints.ipadx = sidepanelResolution.width;
+		constraints.ipady = sidepanelResolution.height;
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.anchor = GridBagConstraints.NORTHEAST;
+		sidepanel.addMouseListener(inputpipe);
+		sidepanel.img = new BufferedImage(sidepanelResolution.width,sidepanelResolution.height,BufferedImage.TYPE_3BYTE_BGR);
+		sidepanel.setPreferredSize(sidepanelResolution);
+		mainwindow.add(sidepanel, constraints);
+		
+		constraints.gridwidth  = 1;
+		constraints.gridheight = 1;
+		constraints.gridx = 0;
+		constraints.gridy = 2;
+		constraints.weightx = 0.0;
+		constraints.weighty = 0.0;
+		constraints.ipadx = colorpanelResolution.width;
+		constraints.ipady = colorpanelResolution.height;
+		constraints.fill = GridBagConstraints.NONE;
+		constraints.anchor = GridBagConstraints.SOUTHWEST;
+		colorpanel.addMouseListener(inputpipe);
+		colorpanel.img = new BufferedImage(colorpanelResolution.width,colorpanelResolution.height,BufferedImage.TYPE_3BYTE_BGR);
+		colorpanel.setPreferredSize(colorpanelResolution);
+		mainwindow.add(colorpanel, constraints);
+		
+		
+		mainwindow.revalidate();
+		mainwindow.pack();
 		mainwindow.setVisible(true);
 	}
 
 	private static void updateGraphics() {
-		if(fractalTableHasChanged || fractalSelectedHasChanged) {
+		if(fractalTableHasChanged || fractalSelectedBoxHasChanged) {
 		updateComboBox();
 		updateTable();
 		
-		fractalSelectedHasChanged = false;
+		fractalSelectedBoxHasChanged = false;
 		fractalTableHasChanged = false;
 		}
-		mainwindow.repaint();
-		drawCurrentTableToMainWindow(mainpanelResolution.width/2, mainpanelResolution.height, mainpanelResolution.width/2, mainpanelResolution.height/4 *3);
-	}
-
-	private static void drawCurrentTableToMainWindow(int ax, int ay, int bx, int by) {
+		
+		
 		Graphics g = mainpanel.img.getGraphics();
+		g.setColor(Color.white);
+		g.fillRect(0, 0, mainpanel.getWidth(), mainpanel.getHeight());
+		
+		Graphics g2 = sidepanel.img.getGraphics();
+		g2.setColor(Color.white);
+		g2.fillRect(0, 0, sidepanel.getWidth(), sidepanel.getHeight());
+		mainwindow.repaint();
+		
+		drawCurrentTableToMainWindow(1 ,currentrow ,sidepanelResolution.width/2, sidepanelResolution.height, sidepanelResolution.width/2, sidepanelResolution.height/4 *3, g2);
+		drawCurrentTableToMainWindow(5 ,0 ,mainpanelResolution.width/2, mainpanelResolution.height, mainpanelResolution.width/2, mainpanelResolution.height/4 *3, g);
+		}
+
+
+	private static void drawCurrentTableToMainWindow( int depth, int firstrow, int ax, int ay, int bx, int by, Graphics g) {
 		Vector<Double> startpos = new Vector<Double>();
 		startpos.add((double)ax);
 		startpos.add((double)ay);
@@ -216,20 +262,17 @@ public class Main{
 		endpos.add((double)bx);
 		endpos.add((double)by);
 		
-		g.setColor(Color.white);
-		g.fillRect(0, 0, mainpanel.getWidth(), mainpanel.getHeight());
 		g.setColor(Color.black);
 		g.drawLine(ax, ay, bx, by);
 		
-		drawCurrentTableToMainWindow(3,0,startpos,endpos,g);
+		drawCurrentTableToMainWindow(depth,firstrow,startpos,endpos,g);
 	}
 	
 	private static void drawCurrentTableToMainWindow(int depth, int tablerow, Vector<Double> startpos,Vector<Double> endpos, Graphics g) {
+		if(depth <=0 || fractaltables.isEmpty()) return;
 		Integer[][] rowvalues = fractaltables.get(currenttable).actualmatrix;
 		Integer[][] actualmatrix = fractaltables.get(currenttable).actualmatrix;
-		if(depth <=0) return;
 		if(rowvalues[0][tablerow] == 0) return;
-		
 		
 		int currentFrac = rowvalues[0][tablerow];
 		int nextFrac = rowvalues[1][tablerow];
@@ -264,7 +307,7 @@ public class Main{
 		g.setColor(new Color(color));
 		g.drawLine(newx1, newy1, newx2, newy2);
 		
-		if(nextFrac != 0) {
+		if(nextFrac != 0 && depth!=1) {
 			for(int i = 0; i < actualmatrix[0].length; i++ ) {
 				if(actualmatrix[0][i] == nextFrac) {
 					drawCurrentTableToMainWindow(depth-1, i, newstart, newend,g);
@@ -276,20 +319,6 @@ public class Main{
 		if(actualmatrix[0][tablerow+1] == currentFrac) {
 			drawCurrentTableToMainWindow(depth,tablerow+1,startpos,endpos,g);
 		}
-		
-		
-		
-		
-		
-	}
-	
-	public double getAngle(Vector<Double> target) {
-	    double angle = Math.toDegrees(Math.atan2(target.get(1), target.get(0)));
-	    if(angle < 0){
-	        angle += 360;
-	    }
-
-	    return angle;
 	}
 	
 	public static Vector<Double> rotateVectorCC(Vector<Double> vec, double theta){
@@ -312,7 +341,7 @@ public class Main{
 	}
 
 	private static void updateTable() {
-			if(fractalTableHasChanged || fractalSelectedHasChanged) {
+			if(fractalTableHasChanged || fractalSelectedBoxHasChanged) {
 			if(currenttable <0 || fractaltables.isEmpty())
 				return;
 			FractalMatrix currentmatrix = fractaltables.get(currenttable);
@@ -330,9 +359,9 @@ public class Main{
 		handleMouseEvent();
 		handleKeyEvent();
 		handleTableEvent();
+		handleSelectionEvent();
 		
 	}
-
 
 	private static void handleActionEvent() {
 		ActionEvent ae = inputpipe.pollNextActionEvent();
@@ -349,7 +378,7 @@ public class Main{
 			
 			if(ae.getSource().equals(fractalcombobox)) {
 				currenttable = fractalcombobox.getSelectedIndex();
-				fractalSelectedHasChanged = true;
+				fractalSelectedBoxHasChanged = true;
 			}
 		}
 	}
@@ -358,7 +387,12 @@ public class Main{
 	private static void loadNewTable() {
 		FractalMatrix newmatrix = FractalLoader.loadFractal();
 		if(newmatrix== null) return;
-		fractaltables.addLast(newmatrix);
+		for(FractalMatrix fm :fractaltables) {
+			if(newmatrix.name.equals(fm.name)) {
+				newmatrix.name = newmatrix.name + "*";
+			}
+		}
+		fractaltables.add(currenttable, newmatrix);
 		fractalTableHasChanged = true;
 		
 	}
@@ -366,7 +400,22 @@ public class Main{
 	
 
 	private static void handleMouseEvent() {
-		// TODO Auto-generated method stub
+		MouseEvent me = inputpipe.pollNextMouseEvent();
+		
+		if(me != null && me.getSource().equals(sidepanel) && !fractaltables.isEmpty()) {
+			int x = me.getX();
+			int y = me.getY();
+			int referenclength = sidepanel.getHeight()/4 *3;
+			if(me.getButton() == MouseEvent.BUTTON1) {
+				fractaltables.get(currenttable).getMatrix()[4][currentrow] = (int)((x-sidepanel.getWidth()/2.0)/referenclength * 100);
+				fractaltables.get(currenttable).getMatrix()[5][currentrow] = sidepanel.getHeight() - y;
+			}
+			if(me.getButton() == MouseEvent.BUTTON3) {
+				fractaltables.get(currenttable).getMatrix()[2][currentrow] = x-sidepanel.getWidth()/2;
+				fractaltables.get(currenttable).getMatrix()[3][currentrow] = sidepanel.getHeight() - y;
+			}
+			fractalTableHasChanged = true;
+		}
 		
 	}
 	
@@ -384,6 +433,22 @@ public class Main{
 		}
 		
 	}
+	
+	
+	/*
+	 * If a new row is selected at the main table then currentrow = selectedrow
+	 */
+	private static void handleSelectionEvent() {
+		ListSelectionEvent se = inputpipe.pollNextSelectionEvent();
+		if(se == null) return; 
+			if(se.getSource().equals(fractaltable.getSelectionModel())) {
+			int selectedrow = fractaltable.getSelectedRow();
+			if(selectedrow != -1 && selectedrow != currentrow) {
+				currentrow = selectedrow;
+			}
+		}
+	}
+	
 
 	/*
 	 * Loads the JTable contend to the FractalMAtrix object

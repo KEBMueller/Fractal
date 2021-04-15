@@ -6,22 +6,26 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedList;
 
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-public class InputPipe implements ActionListener , MouseListener , KeyListener , TableModelListener{
+public class InputPipe implements ActionListener , MouseListener , KeyListener , TableModelListener , ListSelectionListener{
 	
 	// the different action buffers
 	private LinkedList<ActionEvent> actionbuffer;
 	private LinkedList<MouseEvent> mousebuffer;
 	private LinkedList<KeyEvent> keybuffer;
 	private LinkedList<TableModelEvent> tablebuffer;
+	private LinkedList<ListSelectionEvent> selectionbuffer;
 	
 	//Size of the action buffer
 	private int maxActionBufferSize = 10;
 	private int maxMouseBufferSize = 10;
 	private int maxKeyBufferSize = 10;
 	private int maxTableBufferSize = 10;
+	private int maxSelectionBufferSize = 10;
 	private boolean breakflag = false;
 	
 	//Number of the buffer which contains the time chronological next element  1 = Action, 2 = Mouse, 3 = Key, 4 table
@@ -34,6 +38,7 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 		mousebuffer = new LinkedList<MouseEvent>();
 		keybuffer = new LinkedList<KeyEvent>();
 		tablebuffer = new LinkedList<TableModelEvent>();
+		selectionbuffer = new LinkedList<ListSelectionEvent>();
 	}
 	
 	/*
@@ -74,6 +79,13 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 	 */
 	public TableModelEvent pollNextTableEvent() {
 		return tablebuffer.pollFirst();
+	}
+	
+	/*
+	 * Calls .pollFirst() on the selectionbuffer
+	 */
+	public ListSelectionEvent pollNextSelectionEvent() {
+		return selectionbuffer.pollFirst();
 	}
 	
 	/*
@@ -173,6 +185,13 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 		if(!breakflag && tablebuffer.size() < maxTableBufferSize) {
 			if(e.getType() == TableModelEvent.UPDATE)
 				tablebuffer.add(e);
+		}
+	}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		if(!breakflag && selectionbuffer.size() < maxSelectionBufferSize) {
+				selectionbuffer.add(e);
 		}
 	}
 }
