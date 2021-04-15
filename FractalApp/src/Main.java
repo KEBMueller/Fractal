@@ -2,12 +2,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
@@ -20,9 +22,10 @@ public class Main{
 	public static double ticktimems = 10.0;
 	
 	//Graphics parameter
-	public static double framerate = 60;
+	public static double framerate = 30;
 	public static Dimension resolution = new Dimension(600,400); 
 	public static Dimension sidePanelResolution = new Dimension(600,400); 
+	public static final Dimension mainpanelResolution = new Dimension(500,500); 
 	
 	
 
@@ -40,7 +43,7 @@ public class Main{
 	private static Dimension buttonsize = new Dimension(70,15);
 	private static JButton safebutton;
 	private static JButton loadbutton;
-	private static JPanel mainpanel;
+	private static MainPanel mainpanel;
 	private static JComboBox<String> fractalcombobox;
 	private static JTable fractaltable;
 	private static String[] fractaltablecolumns =  {"Cur. Frac.","Next Frac","x1","y1","x2","y2","Color"};
@@ -60,6 +63,7 @@ public class Main{
 	
 
 	public static void main(String[] args) {
+		
 		//	Setup
 		fractaltables = new LinkedList<FractalMatrix>();
 		fractaltables.add(new FractalMatrix(fractaltablelength, "Default"));
@@ -134,6 +138,7 @@ public class Main{
 		mainwindow.add(loadbutton, constraints);
 
 		constraints.gridwidth = 2;
+		constraints.gridheight = 3;
 		constraints.gridx = 2;
 		constraints.gridy = 0;
 		constraints.weightx = 0.5;
@@ -142,6 +147,7 @@ public class Main{
 		constraints.ipady = 0;
 		constraints.fill = GridBagConstraints.BOTH;
 		constraints.anchor = GridBagConstraints.NORTHWEST;
+		mainpanel.setPreferredSize(mainpanelResolution);
 		mainpanel.addMouseListener(inputpipe);
 		mainpanel.setVisible(true);
 		mainwindow.add(mainpanel, constraints);
@@ -197,18 +203,30 @@ public class Main{
 		fractalSelectedHasChanged = false;
 		fractalTableHasChanged = false;
 		}
-		
-		drawCurrentTableToMainWindow();
+		mainwindow.repaint();
+		drawCurrentTableToMainWindow(mainpanelResolution.width/2, mainpanelResolution.height, mainpanelResolution.width/2, mainpanelResolution.height/4 *3);
 	}
 
-	private static void drawCurrentTableToMainWindow() {
-		Graphics g = mainpanel.getGraphics();
+	private static void drawCurrentTableToMainWindow(int ax, int ay, int bx, int by) {
+		Graphics g = mainpanel.img.getGraphics();
+		Vector<Double> startpos = new Vector<Double>();
+		startpos.add((double)ax);
+		startpos.add((double)ay);
+		Vector<Double> endpos = new Vector<Double>();
+		endpos.add((double)bx);
+		endpos.add((double)by);
 		
+		g.setColor(Color.white);
+		g.fillRect(0, 0, mainpanel.getWidth(), mainpanel.getHeight());
+		g.setColor(Color.black);
+		g.drawLine(ax, ay, bx, by);
+		
+		drawCurrentTableToMainWindow(3,0,startpos,endpos,g);
 	}
 	
-	private static void drawCurrentTableToMainWindow(int depth, int tablerow, Graphics g) {
+	private static void drawCurrentTableToMainWindow(int depth, int tablerow, Vector<Double> startpos,Vector<Double> endpos, Graphics g) {
 		Integer[][] rowvalues = fractaltables.get(currenttable).actualmatrix;
-
+		Integer[][] actualmatrix = fractaltables.get(currenttable).actualmatrix;
 		if(depth <=0) return;
 		if(rowvalues[0][tablerow] == 0) return;
 		
@@ -216,20 +234,74 @@ public class Main{
 		int currentFrac = rowvalues[0][tablerow];
 		int nextFrac = rowvalues[1][tablerow];
 		int x1 = rowvalues[2][tablerow];
-		int y1 = rowvalues[3][tablerow];
+		int y1 = rowvalues[3][tablerow];//Point c
 		int x2 = rowvalues[4][tablerow];
-		int y2 = rowvalues[5][tablerow];
+		int y2 = rowvalues[5][tablerow];//Point d
 		int color = rowvalues[6][tablerow];
 		
-		g.setColor(new Color(color));
+		Vector<Double> rotationaxis = new Vector<Double>();
+		rotationaxis.add(0.0);
+		rotationaxis.add(0.0);
+		rotationaxis.add(1.0);
 		
+		Vector<Double> yvector = new Vector<Double>();
+		yvector.add(new Double(endpos.get(0)-startpos.get(0)));
+		yvector.add(new Double(endpos.get(1)-startpos.get(1)));
+		Vector<Double> xvector = rotateVectorCC(yvector, 90);
+		
+		int newx1 = (int)(startpos.get(0) + xvector.get(0) * x1/100.0 + yvector.get(0) * y1/100.0);
+		int newy1 = (int)(startpos.get(1) + yvector.get(1) * y1/100.0 + xvector.get(1) * x1/100.0);
+		int newx2 = (int)(startpos.get(0) + xvector.get(0) * x2/100.0 + yvector.get(0) * y2/100.0);
+		int newy2 = (int)(startpos.get(1) + yvector.get(1) * y2/100.0 + xvector.get(1) * x2/100.0);
+
+		Vector<Double> newstart = new Vector<Double>();
+		newstart.add(newx1+0.0);
+		newstart.add(newy1+0.0);
+		Vector<Double> newend = new Vector<Double>();
+		newend.add(newx2+0.0);
+		newend.add(newy2+0.0);
+			
+		g.setColor(new Color(color));
+		g.drawLine(newx1, newy1, newx2, newy2);
+		
+		if(nextFrac != 0) {
+			for(int i = 0; i < actualmatrix[0].length; i++ ) {
+				if(actualmatrix[0][i] == nextFrac) {
+					drawCurrentTableToMainWindow(depth-1, i, newstart, newend,g);
+					break;
+				}
+			}
+		}
+		
+		if(actualmatrix[0][tablerow+1] == currentFrac) {
+			drawCurrentTableToMainWindow(depth,tablerow+1,startpos,endpos,g);
+		}
 		
 		
 		
 		
 		
 	}
+	
+	public double getAngle(Vector<Double> target) {
+	    double angle = Math.toDegrees(Math.atan2(target.get(1), target.get(0)));
+	    if(angle < 0){
+	        angle += 360;
+	    }
 
+	    return angle;
+	}
+	
+	public static Vector<Double> rotateVectorCC(Vector<Double> vec, double theta){
+	    Vector<Double> result = new Vector<Double>();
+	    theta = Math.toRadians(theta);
+	    result.add(Math.cos(theta) * vec.get(0) - Math.sin(theta) * vec.get(1));
+	    result.add(Math.sin(theta) * vec.get(0) - Math.cos(theta) * vec.get(1));
+	    return result;
+	}
+
+	
+	
 	private static void updateComboBox() {
 		if(fractalTableHasChanged) {
 			fractalcombobox.removeAllItems();
@@ -322,7 +394,7 @@ public class Main{
 		for(int i = 0; i < actualmatrix.length; i++) {
 			for(int j = 0; j<actualmatrix[i].length && j <fractaltable.getModel().getRowCount(); j++) {
 				try {
-					actualmatrix[i][j] = Integer.parseInt((String)(fractaltable.getModel().getValueAt(j, i)+""));
+					actualmatrix[i][j] = Integer.parseInt(fractaltable.getModel().getValueAt(j, i)+"");
 				} catch(Exception e) {
 					e.printStackTrace();
 					System.out.println("Invalid table contend at x:" + i + "  y:"+j+ "  Contend:"+fractaltable.getModel().getValueAt(j, i)+"|");
