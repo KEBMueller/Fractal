@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import javax.swing.JFileChooser;
@@ -44,10 +45,10 @@ public class FractalLoader {
 	public static FractalMatrix loadFractal() {
 		JFileChooser chooser = new JFileChooser();
 		int returnVal = 0;
+		File file;
 		returnVal = chooser.showOpenDialog(null);
-			
-		if(returnVal == JFileChooser.APPROVE_OPTION) {
-			File file = chooser.getSelectedFile();
+		file = chooser.getSelectedFile();
+		if(file != null) {
 			List<String> contend = null;
 			try {
 				contend = Files.readAllLines(file.toPath());
@@ -65,7 +66,7 @@ public class FractalLoader {
 				if(!contend.isEmpty()) {
 					currentLine = contend.remove(0);
 					String[] values = currentLine.split( "," );
-					for(int j = 0 ; j<7 ; j++) {
+					for(int j = 0 ; j<7 && j<values.length ; j++) {
 						int value = Integer.parseInt(values[j]);
 						loadedMatrix.editmatrix(j, i, value);
 					}

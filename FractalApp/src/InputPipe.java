@@ -4,14 +4,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.util.LinkedList;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-public class InputPipe implements ActionListener , MouseListener , KeyListener , TableModelListener , ListSelectionListener{
+public class InputPipe implements ActionListener , MouseListener , KeyListener , TableModelListener , ListSelectionListener , ChangeListener , MouseWheelListener{
 	
 	// the different action buffers
 	private LinkedList<ActionEvent> actionbuffer;
@@ -19,6 +23,8 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 	private LinkedList<KeyEvent> keybuffer;
 	private LinkedList<TableModelEvent> tablebuffer;
 	private LinkedList<ListSelectionEvent> selectionbuffer;
+	private LinkedList<ChangeEvent> changebuffer;
+	private LinkedList<MouseWheelEvent> mousewheelbuffer;
 	
 	//Size of the action buffer
 	private int maxActionBufferSize = 10;
@@ -26,6 +32,8 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 	private int maxKeyBufferSize = 10;
 	private int maxTableBufferSize = 10;
 	private int maxSelectionBufferSize = 10;
+	private int maxChangeBufferSize = 10;
+	private int maxMouseWheelBufferSize = 10;
 	private boolean breakflag = false;
 	
 	//Number of the buffer which contains the time chronological next element  1 = Action, 2 = Mouse, 3 = Key, 4 table
@@ -39,16 +47,19 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 		keybuffer = new LinkedList<KeyEvent>();
 		tablebuffer = new LinkedList<TableModelEvent>();
 		selectionbuffer = new LinkedList<ListSelectionEvent>();
+		changebuffer = new LinkedList<ChangeEvent>();
+		mousewheelbuffer = new LinkedList<MouseWheelEvent>();
 	}
 	
-	/*
+	/*				unimplemented
 	 * returns 0 if no Event has occured,
 	 *         1 if an ActionEvent
 	 *         2 if an MouseEvent
 	 *         3 if an KeyEvent
 	 */
 	public int getNextEventIndexByTime() {
-		
+		int[] a = null;
+		a[7] = 4;
 		return 0;
 	}
 	
@@ -89,12 +100,27 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 	}
 	
 	/*
+	 * Calls .pollFirst() on the changebuffer
+	 */
+	public ChangeEvent pollNextChangeEvent() {
+		return changebuffer.pollFirst();
+	}
+	
+	/*
+	 * 
+	 */
+	public MouseWheelEvent pollNextMouseWheelEvent() {
+		return mousewheelbuffer.poll();
+	}
+	
+	/*
 	 * Deletes all stored inputevents
 	 */
 	public void clearAll() {
 		clearAllActionEvents();
 		clearAllMouseEvents();
 		clearAllKeyEvents();
+		clearAllTableEvents();
 	}
 
 	public void clearAllActionEvents() {
@@ -192,6 +218,20 @@ public class InputPipe implements ActionListener , MouseListener , KeyListener ,
 	public void valueChanged(ListSelectionEvent e) {
 		if(!breakflag && selectionbuffer.size() < maxSelectionBufferSize) {
 				selectionbuffer.add(e);
+		}
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
+		if(!breakflag && changebuffer.size() < maxChangeBufferSize) {
+			changebuffer.add(e);
+		}
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		if(!breakflag && mousewheelbuffer.size() < maxMouseWheelBufferSize) {
+			mousewheelbuffer.add(e);
 		}
 	}
 }
